@@ -45,6 +45,7 @@ export default function Form() {
   const [photo, setPhoto] = useState(null);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [file, setFile] = useState(null);
 
   // State to track current step in the form
   const [step, setStep] = useState(1);
@@ -67,37 +68,35 @@ export default function Form() {
     const file = e.target.files[0];
     if (file) {
       setPhoto(URL.createObjectURL(file));
+      setFile(file);
     }
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     console.log('Selected Features:', features);
     console.log('Uploaded Photo:', photo);
 
     const formData = new FormData();
-    if (photo) formData.append('image', photo);
+
+    if (photo) formData.append('image', file);
 
     for (const key in features) {
       formData.append(key, features[key].toString());
     }
-    console.log('Form Data:', formData);
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/update_features/', features, {
-        headers: {
-          'Content-Type': 'multipart/form-data', // Required for FormData
-        },
-      });
-
-      console.log(features)
-
+      const response = await axios.post('http://127.0.0.1:8000/api/update_features/', formData);
       setResult(response.data);
-      setError(null); // Clear any previous errors
+      setError(null);
     } catch (error) {
       console.error('Error submitting data:', error);
-      setError(error.message || 'An error occurred while submitting data.'); // Provide user-friendly error message
+      setError(error.message || 'An error occurred while submitting data.');
       setResult(null);
     }
 
